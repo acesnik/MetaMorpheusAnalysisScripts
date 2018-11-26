@@ -12,10 +12,12 @@ namespace AnalysisScripts
         public List<string> Values { get; }
         public double QValue { get; }
         public bool IsDecoy { get; }
+        public bool IsContaminant { get; }
         public List<PeptideWithSetModifications> PossiblePeptides { get; }
         public bool IsVariantPeptide { get; }
         public bool IsModifiedVariantPeptide { get; }
         public bool IsModifiedPeptide { get; }
+        public bool IsNovelTranscriptPeptide { get; }
 
         public PsmFromText(List<string> columns, List<string> values, double fdrCutoff, Dictionary<string, Modification> mods)
         {
@@ -28,10 +30,12 @@ namespace AnalysisScripts
             QValue = double.Parse(Values[Columns.IndexOf("QValue")]);
             if (QValue >= fdrCutoff) { return; }
             IsDecoy = Values[Columns.IndexOf("Decoy/Contaminant/Target")] == "D";
+            IsContaminant = Values[Columns.IndexOf("Decoy/Contaminant/Target")] == "C";
             IsVariantPeptide = Values[Columns.IndexOf("Identified Sequence Variations")].Split('|').Any(x => x.Length > 0);
             IsModifiedVariantPeptide = Values[Columns.IndexOf("Identified Sequence Variations")].Split('|').Any(x => x.Contains('['));
             PossiblePeptides = Values[Columns.IndexOf("Full Sequence")].Split('|').Select(x => new PeptideWithSetModifications(x, mods)).ToList();
             IsModifiedPeptide = PossiblePeptides.Any(x => x.AllModsOneIsNterminus.Count > 0);
+            IsNovelTranscriptPeptide = (Values[Columns.IndexOf("Protein Accession")].StartsWith("MSTRG") || Values[Columns.IndexOf("Protein Accession")].StartsWith("DECOY_MSTRG")) && Values[Columns.IndexOf("Protein Name")].Length <= 0;
         }
     }
 }

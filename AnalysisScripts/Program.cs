@@ -12,7 +12,7 @@ namespace AnalysisScripts
     {
         public static readonly double FdrCutoff = 0.01;
 
-        public static readonly List<string> Folders = new List<string>
+        public static readonly List<string> VariantFolders = new List<string>
         {
             @"G:\SpritzDatabases\JurkatRNA\rpm0.00\snpEffAnnotated.protein.withmods",
             @"G:\SpritzDatabases\JurkatRNA\rpm0.00\NoIndels.snpEffAnnotated.protein.withmods",
@@ -37,14 +37,21 @@ namespace AnalysisScripts
             @"G:\SpritzDatabases\ReferenceOnlyGRCh38\rpm0.00\Homo_sapiens.GRCh38.81.snpEffAnnotated.protein.withmods"
         };
 
+        public static readonly List<string> SpliceFolders = new List<string>
+        {
+            @"G:\SpritzDatabases\ReferenceOnlyGRCh37\snpEffAnnotated.protein.withmods",
+            @"G:\SpritzDatabases\MCF7Stringtie\snpEffAnnotated.protein.withmods",
+            @"G:\SpritzDatabases\MCF7StringtieRNAVariants\snpEffAnnotated.protein.withmods"
+        };
+
         public static readonly string OutputFolder = @"G:\SpritzDatabases\AnalysisOutput";
 
         public static void Main(string[] args)
         {
-            AnalyzeMultipleFolders(Folders);
+            AnalyzeMultipleFolders(SpliceFolders, nameof(SpliceFolders));
         }
 
-        public static void AnalyzeMultipleFolders(List<string> folders)
+        public static void AnalyzeMultipleFolders(List<string> folders, string outsuffix)
         {
             // setup
             Loaders.LoadElements(Path.Combine(Environment.CurrentDirectory, "elements.dat"));
@@ -52,11 +59,11 @@ namespace AnalysisScripts
 
             // analysis & output
             Directory.CreateDirectory(OutputFolder);
-            string outfile = Path.Combine(OutputFolder, "out.txt");
+            string outfile = Path.Combine(OutputFolder, $"out{outsuffix}.txt");
             if (File.Exists(outfile)) { File.Delete(outfile); }
             using (StreamWriter writer = new StreamWriter(File.Create(outfile)))
             {
-                List<AnalysisResults> results = Folders.SelectMany(f => AnalyzeResultsFolder(f, commonMods)).ToList();
+                List<AnalysisResults> results = folders.SelectMany(f => AnalyzeResultsFolder(f, commonMods)).ToList();
                 var table = AnalysisResults.SetUpDataTable();
                 results.ForEach(r => r.AddToTable(table));
                 writer.Write(AnalysisResults.ResultsString(table));
